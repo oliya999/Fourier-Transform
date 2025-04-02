@@ -1,0 +1,75 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameters
+fs = 1000  # Sampling frequency (samples per second)
+T = 5      # Duration of the simulation (seconds)
+t = np.linspace(0, T, fs*T, endpoint=False)  # Time vector
+
+# Dynamic load: A force applied to the structure that varies sinusoidally
+frequency_of_load = 50  # Frequency of the applied force (Hz)
+amplitude_of_load = 10  # Amplitude of the applied force
+
+# Simulate the force as a sine wave (representing an oscillating load)
+force = amplitude_of_load * np.sin(2 * np.pi * frequency_of_load * t)
+
+# Structural response: Let's simulate the displacement of the structure in response to the applied force.
+# For simplicity, assume a simple harmonic oscillator with a damped response.
+damping_factor = 0.02  # Damping factor (percentage of critical damping)
+natural_frequency = 50  # Natural frequency of the structure (Hz)
+omega_n = 2 * np.pi * natural_frequency  # Natural frequency in radians per second
+
+# Equation of motion for a damped harmonic oscillator (simple model):
+# x(t) = A * exp(-damping_factor * omega_n * t) * sin(omega_d * t + phase)
+# where omega_d is the damped natural frequency.
+omega_d = omega_n * np.sqrt(1 - damping_factor**2)  # Damped frequency
+
+# Initial conditions: Assuming initial displacement is zero and initial velocity is zero.
+initial_displacement = 0
+initial_velocity = 0
+
+# Displacement (response) of the system to the applied force
+displacement = amplitude_of_load * np.exp(-damping_factor * omega_n * t) * np.sin(omega_d * t)
+
+# Plot the force and displacement (time-domain analysis)
+plt.figure(figsize=(12, 6))
+
+plt.subplot(2, 1, 1)
+plt.plot(t, force)
+plt.title('Applied Force (Time Domain)')
+plt.xlabel('Time [s]')
+plt.ylabel('Force [N]')
+
+plt.subplot(2, 1, 2)
+plt.plot(t, displacement)
+plt.title('Structural Displacement (Time Domain)')
+plt.xlabel('Time [s]')
+plt.ylabel('Displacement [m]')
+
+plt.tight_layout()
+plt.show()
+
+# Now, let's apply Fourier Transform to analyze the frequency content of the displacement.
+
+# Fourier Transform of the displacement signal
+fft_displacement = np.fft.fft(displacement)
+
+# Frequency axis
+frequencies = np.fft.fftfreq(len(displacement), 1/fs)
+
+# Only plot the positive frequencies (real part)
+positive_frequencies = frequencies[:len(frequencies)//2]
+fft_displacement_magnitude = np.abs(fft_displacement)[:len(frequencies)//2]
+
+# Plot the frequency spectrum of the displacement
+plt.figure(figsize=(12, 6))
+plt.plot(positive_frequencies, fft_displacement_magnitude)
+plt.title('Frequency Spectrum of Structural Displacement')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Magnitude')
+plt.grid(True)
+plt.show()
+
+# Identify the peak frequency (which corresponds to the system's resonance frequency)
+resonant_frequency = positive_frequencies[np.argmax(fft_displacement_magnitude)]
+print(f'Resonant Frequency: {resonant_frequency:.2f} Hz')
